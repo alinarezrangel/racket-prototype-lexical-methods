@@ -1,0 +1,51 @@
+* "Lexical Methods"
+
+   - Factor ([[http://factorcode.org][Webpage for the Factor Programming Language]]) uses this: methods
+     are defined independently from classes (see [[https://docs.factorcode.org/content/article-objects.html][Factor Objects]] in the
+     documentation) yet only dispatch on one value, so no global mutation is
+     needed and a single class can implement multiple otherwise-conflicting
+     interfaces. See also [[https://docs.factorcode.org/content/word-GENERIC__colon__%2Csyntax.html][~GENERIC:~, the word used to define generic words]].
+   - Many old LISPs pick methods by using symbols, an always interned
+     string-like datatype (also present in Ruby, Factor and many others). The
+     important difference is that many of these LISPs also provide a special
+     "un-interned" variant of symbols which can be used to emulate these
+     external, lexical methods:
+
+     #+BEGIN_SRC lisp
+       (defvar lexical-method (make-uninterned-symbol 'method-name))
+       (defmethod (,lexical-method self argument)
+         (yadda yadda yadda))
+     #+END_SRC
+
+     Where the hypothetical ~unquote~ inside ~defmethod~ means "use the value
+     of this expression as the method name" rather than the literal symbol.
+   - Many multiple-dispatch systems have the same properties: Julia, for
+     example, uses multiple dispatch as it's main form of polymorphism and as a
+     result of it being a lexically-scoped language it is possible to have
+     different ~foo~ methods on different modules ~A.foo~ and ~B.foo~ and have
+     a single object be able to respond to both of them differently.
+
+     This makes Julia's interfaces composable too. See for example this example
+     from Julia's [[https://docs.julialang.org/en/v1/manual/interfaces/][official documentation]]:
+
+     #+BEGIN_SRC julia
+       struct Squares
+           count::Int
+       end
+       Base.iterate(S::Squares, state=1) = state > S.count ? nothing : (state*state, state+1)
+     #+END_SRC
+
+     Note the use of ~Base.iterate~ allowing other ~iterate~ methods to work
+     seamlessly.
+   - I /think/ Dylan [[https://opendylan.org/books/drm/Functions_Overview][generic functions and methods]] work like this too.
+
+** Advantages
+
+   - Interfaces compose as name conflicts are no longer important, allowing
+     objects to truly implement the interfaces they need without making use of
+     the Adapter pattern.
+   - Can be added while keeping backwards compatibility to any message passing
+     language.
+
+*** TODO Clarify this
+
